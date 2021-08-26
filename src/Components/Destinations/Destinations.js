@@ -11,7 +11,7 @@ const Destinations = (props) => {
     let p = [];
     arr.forEach((item, index) => {
       let place = fetch(
-        `https://api.opentripmap.com/0.1/en/places/xid/${item.xid}?apikey=5ae2e3f221c38a28845f05b6cc6f1dc85d943d9f21e63d0a87e5affc`,
+        `https://api.opentripmap.com/0.1/en/places/xid/${item.xid}?apikey=${process.env.REACT_APP_OPENTRIPMAPKEY}`,
         {
           method: "GET",
         }

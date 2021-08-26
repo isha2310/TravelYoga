@@ -22,7 +22,7 @@ function App() {
       let max_lon = parseFloat(lon) + 0.5;
       const result = fetch(
         `
-      https://api.opentripmap.com/0.1/en/places/bbox?lon_min=${min_lon}&lon_max=${max_lon}&lat_min=${min_lat}&lat_max=${max_lat}&limit=15&apikey=5ae2e3f221c38a28845f05b6cc6f1dc85d943d9f21e63d0a87e5affc`,
+      https://api.opentripmap.com/0.1/en/places/bbox?lon_min=${min_lon}&lon_max=${max_lon}&lat_min=${min_lat}&lat_max=${max_lat}&limit=15&apikey=${process.env.REACT_APP_OPENTRIPMAPKEY}`,
         {
           method: "GET",
         }
@@ -62,8 +62,9 @@ function App() {
       setLon("");
       let query = string;
       if (query.length > 3) {
+        console.log('......',process.env.REACT_APP_LOCATIONKEY)
         const results = fetch(
-          `https://api.locationiq.com/v1/autocomplete.php?key=pk.fe39ab4e910632765f07bcb18606fb98&q=${query}&limit=5`,
+          `https://api.locationiq.com/v1/autocomplete.php?key=${process.env.REACT_APP_LOCATIONKEY}&q=${query}&limit=5`,
           {
             method: "GET",
           }
@@ -101,7 +102,7 @@ function App() {
   useEffect(() => {
     console.log('runnn2')
     if (value !== "") {
-      let url = `https://www.googleapis.com/customsearch/v1/siterestrict?key=AIzaSyCIbza9euTW2WoWoqBNrci7m1KpkPRcDmI&cx=1676e1881190491cc&q=About ${value}`;
+      let url = `https://www.googleapis.com/customsearch/v1/siterestrict?key=${process.env.REACT_APP_GOOGLEKEY}&cx=${process.env.REACT_APP_SEARCHENGINE}&q=About ${value}`;
       fetch(url, { method: "GET" })
         .then(function (response) {
           return response.json();
