@@ -1,15 +1,166 @@
-import React, { useState } from 'react';
-import logo from './logo.svg';
-import './App.css';
-import Search from './Components/SearchSuggestions/SearchSuggestions';
+import React, { useEffect, useState } from "react";
+import "./App.css";
+import { ReactSearchAutocomplete } from "react-search-autocomplete";
+import Destinations from "./Components/Destinations/Destinations";
 
 function App() {
+  const [errors, setErrors] = useState();
+  const [suggestions, setSuggestions] = useState([]);
+  const [value, setValue] = useState("");
+  const [lat, setLat] = useState("");
+  const [lon, setLon] = useState("");
+  const [places, setPlaces] = useState([]);
+  const [intro, setIntro] = useState("");
+  const [link, setLink] = useState("");
 
+  useEffect(() => {
+    console.log("runnn1");
+    if (lat !== "" && lon !== "") {
+      let min_lat = parseFloat(lat) - 0.5;
+      let max_lat = parseFloat(lat) + 0.5;
+      let min_lon = parseFloat(lon) - 0.5;
+      let max_lon = parseFloat(lon) + 0.5;
+      const result = fetch(
+        `
+      https://api.opentripmap.com/0.1/en/places/bbox?lon_min=${min_lon}&lon_max=${max_lon}&lat_min=${min_lat}&lat_max=${max_lat}&limit=15&apikey=5ae2e3f221c38a28845f05b6cc6f1dc85d943d9f21e63d0a87e5affc`,
+        {
+          method: "GET",
+        }
+      )
+        .then((res) => res.json())
+        .catch((e) => console.log(e));
+      result.then((res) => {
+        console.log(res)
+        let results = [];
+        res = res.features.filter((item) => {
+          if (
+            results.filter(
+              (res1) =>
+                res1.name.toUpperCase() === item.properties.name.toUpperCase()
+            ).length === 0 &&
+            item.properties.name.trim() !== ""
+          ) {
+            results.push(item.properties);
+            return item.properties;
+          } else return null;
+        });
+        if (results.length > 8) results = results.slice(0, 7);
+        console.log([...results]);
+        setPlaces([...results]);
+      })
+      .catch((e) => console.log(e) )
+    }
+  }, [lat, lon]);
+
+  const handleOnSearch = (string, result) => {
+    if (string === value) {
+      result = suggestions;
+    } else {
+      setPlaces([]);
+      setValue("");
+      setLat("");
+      setLon("");
+      let query = string;
+      if (query.length > 3) {
+        const results = fetch(
+          `https://api.locationiq.com/v1/autocomplete.php?key=pk.fe39ab4e910632765f07bcb18606fb98&q=${query}&limit=5`,
+          {
+            method: "GET",
+          }
+        )
+          .then((res) => res.json())
+          .catch((e) => console.log(e));
+        results.then((res) => {
+          if (res.error === "Unable to geocode") {
+            setErrors("Place not found. Try Again!");
+            setSuggestions([]);
+          } else if (res.error) {
+            setSuggestions([]);
+          } else {
+            let sugg = [];
+            res.map((place, index) => {
+              let ele = {};
+              ele.id = index;
+              ele.name = place.display_name;
+              ele.lat = place.lat;
+              ele.lon = place.lon;
+              sugg.push(ele);
+              return sugg;
+            });
+            setSuggestions(sugg);
+          }
+          result = suggestions;
+        });
+      } else {
+        setSuggestions([]);
+        result = [];
+      }
+    }
+  };
+
+  useEffect(() => {
+    console.log('runnn2')
+    if (value !== "") {
+      let url = `https://www.googleapis.com/customsearch/v1/siterestrict?key=AIzaSyCIbza9euTW2WoWoqBNrci7m1KpkPRcDmI&cx=1676e1881190491cc&q=About ${value}`;
+      fetch(url, { method: "GET" })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (response) {
+          console.log(response.items[0]);
+          let info = response.items[0].snippet;
+          info = info.replace(/listen/, value);
+          setIntro(info);
+          setLink(response.items[0].link);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+  }, [value]);
+
+  const handleOnSelect = (item) => {
+    console.log(item);
+    if (item.name !== value) {
+      setValue(item.name);
+      setLon(item.lon);
+      setLat(item.lat);
+    }
+  };
 
   return (
     <div className="App">
-      <div style={{display: 'flex', color: '#61dafb', padding: '0px 20px'}} ><h1>TravelYoga &nbsp;</h1><h1 className="App-logo" > : )</h1></div>
-      <Search />
+      <div>
+        <h1 className="Logo">TravelYoga &nbsp;</h1>
+      </div>
+      <div style={{ margin: "auto" }} className="Search" >
+        <ReactSearchAutocomplete
+          items={suggestions}
+          onSearch={handleOnSearch}
+          onSelect={handleOnSelect}
+          styling={{border: "0.2rem solid #fff", boxShadow: "0 0 0.2rem #fff, 0 0 0.2rem #fff, 0 0 0.4rem #bc13fe, 0 0 0.2rem #bc13fe, 0 0 1rem #bc13fe, inset 0 0 1rem #bc13fe" }}
+          autoFocus
+        />
+      </div>
+      {value !== "" ? (
+        <div className="InfoDiv">
+          <div style={{ textAlign: "left" }} className={"IntroBox Box"}>
+            <h1
+              style={{ color: "#c9c8c8", fontSize: "40px", marginTop: "8px" }}
+            >
+              {value}
+            </h1>
+            <p className={"Intro"} >
+              {intro} &nbsp;<a href={link} target="_blank" rel="noreferrer" style={{fontSize: '10px'}}>[read more]</a>
+            </p>
+            <p className={"Intro"}>Some of the popular places here which you might want to visit are here. Have a look at them!</p>
+          </div>
+          <Destinations result={places} />
+        </div>)
+        :
+        <p className="Slang" >“Traveling – it leaves you speechless, then turns you into a storyteller.” – Ibn Battuta
+        </p>
+      }
     </div>
   );
 }
