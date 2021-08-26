@@ -28,26 +28,73 @@ function App() {
       )
         .then((res) => res.json())
         .catch((e) => console.log(e));
-      result.then((res) => {
-        let results = [];
-        res = res.features.filter((item) => {
-          if (
-            results.filter(
-              (res1) =>
-                res1.name.toUpperCase() === item.properties.name.toUpperCase()
-            ).length === 0 &&
-            item.properties.name.trim() !== ""
-          ) {
-            results.push(item.properties);
-            return item.properties;
-          } else return null;
-        });
-        if (results.length > 8) results = results.slice(0, 7);
-        setPlaces([...results]);
-      })
-      .catch((e) => console.log(e) )
+      result
+        .then((res) => {
+          let results = [];
+          res = res.features.filter((item) => {
+            if (
+              results.filter(
+                (res1) =>
+                  res1.name.toUpperCase() === item.properties.name.toUpperCase()
+              ).length === 0 &&
+              item.properties.name.trim() !== ""
+            ) {
+              results.push(item.properties);
+              return item.properties;
+            } else return null;
+          });
+          if (results.length > 8) results = results.slice(0, 7);
+          setPlaces([...results]);
+        })
+        .catch((e) => console.log(e));
     }
   }, [lat, lon]);
+
+  const handleKeyDown = (e) => {
+    if (e.keyCode === 13) {
+      let r = document.getElementsByClassName('sc-bxivhb')[0].children
+      let string = r[1].value
+      handleSuggestions(string);
+      let result = [...suggestions]
+      if (result.length !== 0) {
+        let item = result[0];
+        setValue(item.name);
+        setLon(item.lon);
+        setLat(item.lat);
+      }
+    }
+  };
+
+  const handleSuggestions = (string) => {
+    const results = fetch(
+      `https://api.locationiq.com/v1/autocomplete.php?key=${process.env.REACT_APP_LOCATIONKEY}&q=${string}&limit=5`,
+      {
+        method: "GET",
+      }
+    )
+      .then((res) => res.json())
+      .catch((e) => console.log(e));
+    results.then((res) => {
+      if (res.error === "Unable to geocode") {
+        setErrors("Place not found. Try Again!");
+        setSuggestions([]);
+      } else if (res.error) {
+        setSuggestions([]);
+      } else {
+        let sugg = [];
+        res.map((place, index) => {
+          let ele = {};
+          ele.id = index;
+          ele.name = place.display_name;
+          ele.lat = place.lat;
+          ele.lon = place.lon;
+          sugg.push(ele);
+          return sugg;
+        });
+        setSuggestions(sugg);
+      }
+    });
+  };
 
   const handleOnSearch = (string, result) => {
     if (string === value) {
@@ -59,35 +106,8 @@ function App() {
       setLon("");
       let query = string;
       if (query.length > 3) {
-        const results = fetch(
-          `https://api.locationiq.com/v1/autocomplete.php?key=${process.env.REACT_APP_LOCATIONKEY}&q=${query}&limit=5`,
-          {
-            method: "GET",
-          }
-        )
-          .then((res) => res.json())
-          .catch((e) => console.log(e));
-        results.then((res) => {
-          if (res.error === "Unable to geocode") {
-            setErrors("Place not found. Try Again!");
-            setSuggestions([]);
-          } else if (res.error) {
-            setSuggestions([]);
-          } else {
-            let sugg = [];
-            res.map((place, index) => {
-              let ele = {};
-              ele.id = index;
-              ele.name = place.display_name;
-              ele.lat = place.lat;
-              ele.lon = place.lon;
-              sugg.push(ele);
-              return sugg;
-            });
-            setSuggestions(sugg);
-          }
-          result = suggestions;
-        });
+        handleSuggestions(query);
+        result = suggestions
       } else {
         setSuggestions([]);
         result = [];
@@ -127,12 +147,17 @@ function App() {
       <div>
         <h1 className="Logo">TravelYoga &nbsp;</h1>
       </div>
-      <div style={{ margin: "auto" }} className="Search" >
+      <div style={{ margin: "auto" }} className="Search" onKeyDown={handleKeyDown} id="SearchBar" >
         <ReactSearchAutocomplete
           items={suggestions}
           onSearch={handleOnSearch}
           onSelect={handleOnSelect}
-          styling={{border: "0.2rem solid #fff", boxShadow: "0 0 0.2rem #fff, 0 0 0.2rem #fff, 0 0 0.4rem #bc13fe, 0 0 0.2rem #bc13fe, 0 0 1rem #bc13fe, inset 0 0 1rem #bc13fe" }}
+          placeholder="Enter the place you want to explore"
+          styling={{
+            border: "0.2rem solid #fff",
+            boxShadow:
+              "0 0 0.2rem #fff, 0 0 0.2rem #fff, 0 0 0.4rem #bc13fe, 0 0 0.2rem #bc13fe, 0 0 1rem #bc13fe, inset 0 0 1rem #bc13fe",
+          }}
           autoFocus
         />
       </div>
@@ -144,17 +169,30 @@ function App() {
             >
               {value}
             </h1>
-            <p className={"Intro"} >
-              {intro} &nbsp;<a href={link} target="_blank" rel="noreferrer" style={{fontSize: '10px'}}>[read more]</a>
+            <p className={"Intro"}>
+              {intro} &nbsp;
+              <a
+                href={link}
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: "10px" }}
+              >
+                [read more]
+              </a>
             </p>
-            <p className={"Intro"}>Some of the popular places here which you might want to visit are here. Have a look at them!</p>
+            <p className={"Intro"}>
+              Some of the popular places here which you might want to visit are
+              here. Have a look at them!
+            </p>
           </div>
           <Destinations result={places} />
-        </div>)
-        :
-        <p className="Slang" >“Traveling – it leaves you speechless, then turns you into a storyteller.” – Ibn Battuta
+        </div>
+      ) : (
+        <p className="Slang">
+          “Travelling – it leaves you speechless, then turns you into a
+          storyteller.” – Ibn Battuta
         </p>
-      }
+      )}
     </div>
   );
 }

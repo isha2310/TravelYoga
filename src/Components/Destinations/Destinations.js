@@ -23,6 +23,7 @@ const Destinations = (props) => {
     });
     const timeout = setTimeout(() => {
       setPlaces([...p]);
+      console.log(p)
     }, 1000);
     return () => clearTimeout(timeout);
   }, [arr]);
@@ -85,7 +86,7 @@ const Destinations = (props) => {
               )}
               <h3 >{place.name}</h3>
               {place.wikipedia_extracts && place.wikipedia_extracts.text && (
-                <p>{place.wikipedia_extracts.text}</p>
+                <p translate="yes" >{place.wikipedia_extracts.text}</p>
               )}
             </div>
           ))}
