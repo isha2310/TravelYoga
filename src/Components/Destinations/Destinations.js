@@ -7,7 +7,6 @@ const Destinations = (props) => {
   const [places, setPlaces] = useState([]);
 
   useEffect(() => {
-    console.log(arr);
     let p = [];
     arr.forEach((item, index) => {
       let place = fetch(
@@ -22,7 +21,6 @@ const Destinations = (props) => {
         p[index] = res;
       });
     });
-    console.log(".....", p);
     const timeout = setTimeout(() => {
       setPlaces([...p]);
     }, 1000);

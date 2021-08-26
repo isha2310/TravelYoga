@@ -14,7 +14,6 @@ function App() {
   const [link, setLink] = useState("");
 
   useEffect(() => {
-    console.log("runnn1");
     if (lat !== "" && lon !== "") {
       let min_lat = parseFloat(lat) - 0.5;
       let max_lat = parseFloat(lat) + 0.5;
@@ -30,7 +29,6 @@ function App() {
         .then((res) => res.json())
         .catch((e) => console.log(e));
       result.then((res) => {
-        console.log(res)
         let results = [];
         res = res.features.filter((item) => {
           if (
@@ -45,7 +43,6 @@ function App() {
           } else return null;
         });
         if (results.length > 8) results = results.slice(0, 7);
-        console.log([...results]);
         setPlaces([...results]);
       })
       .catch((e) => console.log(e) )
@@ -62,7 +59,6 @@ function App() {
       setLon("");
       let query = string;
       if (query.length > 3) {
-        console.log('......',process.env.REACT_APP_LOCATIONKEY)
         const results = fetch(
           `https://api.locationiq.com/v1/autocomplete.php?key=${process.env.REACT_APP_LOCATIONKEY}&q=${query}&limit=5`,
           {
@@ -100,7 +96,6 @@ function App() {
   };
 
   useEffect(() => {
-    console.log('runnn2')
     if (value !== "") {
       let url = `https://www.googleapis.com/customsearch/v1/siterestrict?key=${process.env.REACT_APP_GOOGLEKEY}&cx=${process.env.REACT_APP_SEARCHENGINE}&q=About ${value}`;
       fetch(url, { method: "GET" })
@@ -108,7 +103,6 @@ function App() {
           return response.json();
         })
         .then(function (response) {
-          console.log(response.items[0]);
           let info = response.items[0].snippet;
           info = info.replace(/listen/, value);
           setIntro(info);
@@ -121,7 +115,6 @@ function App() {
   }, [value]);
 
   const handleOnSelect = (item) => {
-    console.log(item);
     if (item.name !== value) {
       setValue(item.name);
       setLon(item.lon);
